@@ -3,19 +3,38 @@ import { uri as serviceUri } from '../pages/service/index';
 import { uri as clientUri } from '../pages/client/index';
 import { uri as recordUri } from '../pages/record/index';
 
-const domain = 'http://localhost:8080';
+export const domain = 'http://prognosist.ru:8080';
 
+const accessToken = localStorage.getItem('accessToken');
 const getBearer = () => {
     const accessToken = localStorage.getItem('accessToken');
     return 'Bearer ' + accessToken;
 }
 
 const HEADERS = {
-    'Authorization': getBearer(),
+    'Authorization': accessToken ? getBearer() : undefined,
     'Content-Type': 'application/json;charset=utf-8'
 }
 
-const get = async (uri) => {
+export const validateTocken = async () => {
+    const response = await fetch(`${domain}/clients`, {
+        method: 'GET',
+        headers: HEADERS,
+    });
+
+    const status = response.status;
+
+    switch (status) {
+        case 400:
+        case 401:
+        case 403:
+            return false;
+        default:
+            return true;
+    }
+}
+
+export const get = async (uri) => {
     const response = await fetch(`${domain}/${uri}`, {
         method: 'GET',
         headers: HEADERS,
@@ -125,7 +144,6 @@ const simpleServer = {
             return await del(`${recordUri}`, id);
         },
         create: async (obj) => {
-            console.log(obj)
             return await post(`${recordUri}`, obj);
         },
         getTimes: async (date, staffId) => {
@@ -138,8 +156,6 @@ const simpleServer = {
             }
 
             let d = new Date(date);
-
-            console.log(date)
 
             const result = await post('appointments/get-schedule', {
                 date_from: `${correctDay(d.getDate())}.${correctDay(d.getMonth())}.${d.getFullYear()} 00:00:00`,

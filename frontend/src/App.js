@@ -14,43 +14,65 @@ import { ClientIndex } from './pages/client/index';
 import { RecordIndex } from './pages/record/index';
 import { AboutIndex } from './pages/about';
 
+import { validateTocken } from './server/simple';
+
 import './App.css';
 
+
 class App extends React.Component {
-  constructor(props) {
-    super(props);
+  state = {
+    accessToken: null,
+    isAuth: false,
+  };
+
+  async componentDidMount() {
+    let isAuth = await validateTocken();
 
     const accessToken = localStorage.getItem('accessToken');
-    if (!accessToken && window.location.pathname !== `/${loginUri}`) {
+    if (window.location.pathname !== `/${loginUri}` && !isAuth) {
       window.location.pathname = `/${loginUri}`;
     }
 
-    this.state = {
-      accessToken,
+    if (window.location.pathname === `/${loginUri}` && isAuth) {
+      window.location.pathname = `/`;
     }
+
+    this.setState({
+      accessToken,
+      isAuth,
+    });
   }
 
   render() {
     return (
       <>
         <Router>
-          <div style={{paddingBottom: '120px'}} className="wrapper">
-            <Header />
-            <div className="body">
-              <Switch>
-                <Route>
+          <Switch>
 
-                  <LoginIndex />
-                  <RecordIndex />
-                  <StaffIndex />
-                  <ServiceIndex />
-                  <ClientIndex />
-                  <AboutIndex />
+            <div style={{ paddingBottom: '120px' }} className="wrapper">
+              {
+                this.state.isAuth ? (
+                  <Route>
+                    <Header />
+                    <div className="body">
+                      <Switch>
+                        <Route>
 
-                </Route>
-              </Switch>
+                          <RecordIndex />
+                          <StaffIndex />
+                          <ServiceIndex />
+                          <ClientIndex />
+                          <AboutIndex />
+
+                        </Route>
+                      </Switch>
+                    </div>
+                  </Route>
+                ) : <Route><LoginIndex /></Route>
+              }
             </div>
-          </div>
+
+          </Switch>
         </Router>
       </>
     );
