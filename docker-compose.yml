@@ -1,0 +1,29 @@
+version: '3.8'
+
+services:
+
+  dbcourse:
+    image: 'postgres:13.1-alpine'
+    container_name: dbcourse
+    environment:
+      - POSTGRES_USER=course_user
+      - POSTGRES_PASSWORD=course_user
+      - POSTGRES_DB=coursework
+    ports:
+      - "5433:5433"
+    expose:
+      - "5433"
+    networks:
+      - course-network
+    volumes:
+      - course-data:/var/lib/postgresql/data/
+    command: postgres -p 5433
+
+networks:
+  course-network:
+    driver: bridge
+
+volumes:
+  course-volume:
+    driver: local
+  course-data:
